@@ -367,10 +367,12 @@
     <script src="./resources/ol-search-layer.js"></script>
     <script src="./resources/ol-layerswitcher.js"></script>
     <script src="./resources/photon-geocoder-autocomplete.min.js"></script>
+    <!-- 图层文件引用：完全匹配你提供的文件名 -->
     <script src="./layers/__1.js"></script>
     <script src="./layers/_railways_2.js"></script>
     <script src="./layers/_4.js"></script>
     <script src="./layers/_5.js"></script>
+    <!-- 样式文件引用：按图层文件名对应（__1.js → __1_style.js，_xxx.js → _xxx_style.js） -->
     <script src="./styles/__1_style.js"></script>
     <script src="./styles/_railways_2_style.js"></script>
     <script src="./styles/_4_style.js"></script>
@@ -469,11 +471,11 @@
                     matchedCities.forEach(item => {
                         const gdpText = item.gdp !== null ? `${item.gdp} 100 million CNY` : 'No Data';
                         html += `
-                                        <div class="photon-item">
-                                            <div class="city-name">${item.city}</div>
-                                            <div class="city-gdp">2020 Total GDP: ${gdpText}</div>
-                                        </div>
-                                    `;
+                                            <div class="photon-item">
+                                                <div class="city-name">${item.city}</div>
+                                                <div class="city-gdp">2020 Total GDP: ${gdpText}</div>
+                                            </div>
+                                        `;
                     });
                     resultsContainer.style.display = 'block';
                     resultsContainer.innerHTML = html;
