@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- 已替换为你的GitHub Pages实际路径 -->
+    <base href="https://meiyujian123.github.io/GDP-and-Nighttime-Light-Remote-Sensing-Relationship-in-Inner-Mongolia-Autonomous-Region/">
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- QGIS2Web core resources -->
+    <link rel="stylesheet" href="./resources/ol.css">
+    <link rel="stylesheet" href="./resources/fontawesome-all.min.css">
+    <link rel="stylesheet" type="text/css" href="./resources/horsey.min.css">
+    <link rel="stylesheet" type="text/css" href="./resources/ol-search-layer.min.css">
+    <link href="./resources/photon-geocoder-autocomplete.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./resources/ol-layerswitcher.css">
+    <link rel="stylesheet" href="./resources/qgis2web.css">
+    <!-- ECharts CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        /* Base styles - system fonts to avoid loading issues */
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Title container with glassmorphism */
+        .title-container {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.7);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            padding: 10px 20px;
+            border: 1px solid rgba(204, 204, 204, 0.3);
+            font-size: 26px;
+            font-weight: bold;
+            z-index: 9999 !important;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .title-logo {
+            width: 80px;
+            height: 80px;
+            vertical-align: middle;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.12));
+        }
+
+        /* Search panel styles */
+        #photonBox {
+            position: absolute;
+            top: 150px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(204, 204, 204, 0.4);
+            padding: 8px 10px;
+            width: 260px;
+            font-size: 13px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+            #photonBox strong {
+                display: block;
+                margin-bottom: 5px;
+                color: #333;
+            }
+
+        #photonInput {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            font-size: 13px;
+            margin-bottom: 5px;
+            box-sizing: border-box;
+            outline: none;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+            #photonInput:focus {
+                border-color: #0066cc;
+            }
+
+        #photonResults {
+            max-height: 220px;
+            overflow: auto;
+            display: none;
+            margin-top: 4px;
+            border-top: 1px solid #eee;
+            padding-top: 4px;
+        }
+
+        .photon-item {
+            padding: 6px 8px;
+            cursor: default;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+            .photon-item:hover {
+                background-color: #fafafa;
+            }
+
+        .city-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .city-gdp {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .no-result {
+            padding: 6px 8px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        /* Panel styles (research objectives & chart) */
+        #objective-panel, #chart-panel {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        /* Research Objectives面板 - 左侧中间位置 */
+        #objective-panel {
+            top: 350px;
+            left: 10px;
+            width: 220px;
+        }
+
+        /* GDP图表面板 - 缩小尺寸 + 固定到右下角 */
+        #chart-panel {
+            bottom: 10px; /* 距离底部10px */
+            right: 10px; /* 距离右侧10px */
+            width: 300px; /* 保持缩小后的宽度 */
+            font-size: 12px;
+        }
+
+        /* 适配缩小后的面板，同步缩小图表尺寸 */
+        #gdp-light-chart {
+            width: 100%;
+            height: 220px;
+        }
+
+        /* Credits section */
+        #credits {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.7);
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+            padding: 4px 12px;
+            font-size: 12px;
+            border: 1px solid rgba(204,204,204,0.3);
+            z-index: 999; /* 降低层级，避免遮挡图表 */
+            text-shadow: 0 1px 1px rgba(255,255,255,0.9);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        /* Collapsible panel styles */
+        .panel-header {
+            padding: 8px 12px;
+            font-weight: bold;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+            .panel-header::after {
+                content: "▼";
+                font-size: 12px;
+                transition: transform 0.2s;
+            }
+
+            .panel-header.collapsed::after {
+                transform: rotate(-180deg);
+            }
+
+        .panel-content {
+            padding: 10px;
+            display: block;
+            font-size: 11px;
+        }
+
+            .panel-content.hidden {
+                display: none;
+            }
+
+        /* Popup styles */
+        .ol-popup {
+            position: absolute;
+            background-color: white;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #cccccc;
+            bottom: 12px;
+            left: -50px;
+            min-width: 280px;
+            z-index: 10000;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+            .ol-popup:after, .ol-popup:before {
+                top: 100%;
+                border: solid transparent;
+                content: " ";
+                height: 0;
+                width: 0;
+                position: absolute;
+                pointer-events: none;
+            }
+
+            .ol-popup:after {
+                border-top-color: white;
+                border-width: 10px;
+                left: 48px;
+                margin-left: -10px;
+            }
+
+            .ol-popup:before {
+                border-top-color: #cccccc;
+                border-width: 11px;
+                left: 48px;
+                margin-left: -11px;
+            }
+
+        .ol-popup-closer {
+            text-decoration: none;
+            position: absolute;
+            top: 2px;
+            right: 8px;
+        }
+
+            .ol-popup-closer:after {
+                content: "✖";
+            }
+
+        /* OpenLayers control styles */
+        .ol-control > * {
+            background-color: #f8f8f8 !important;
+            color: #444444 !important;
+            border-radius: 0px;
+        }
+
+        .ol-attribution a, .gcd-gl-input::placeholder, .search-layer-input-search::placeholder {
+            color: #444444 !important;
+        }
+
+        .search-layer-input-search {
+            background-color: #f8f8f8 !important;
+        }
+
+        .ol-control > *:focus, .ol-control > *:hover {
+            background-color: rgba(248, 248, 248, 0.7) !important;
+        }
+
+        .ol-control {
+            background-color: rgba(255,255,255,.4) !important;
+            padding: 2px !important;
+        }
+    </style>
+    <title>Inner Mongolia: GDP vs Nighttime Light Intensity</title>
+    <!-- Block Canvas2D warnings (executes first) -->
+    <script>
+        (function () {
+            const originalConsoleWarn = console.warn;
+            console.warn = function (message) {
+                if (typeof message === 'string' && !message.includes('willReadFrequently')) {
+                    originalConsoleWarn.apply(console, arguments);
+                }
+            };
+        })();
+    </script>
+</head>
+<body>
+    <!-- Title with logo -->
+    <div class="title-container">
+        <img src="./images/logo2.jpg" alt="China University of Petroleum Logo" class="title-logo">
+        Inner Mongolia: GDP vs Nighttime Light Intensity
+    </div>
+
+    <!-- Research Objectives Panel（左侧中间位置） -->
+    <div id="objective-panel" class="panel">
+        <div class="panel-header">Research Objectives</div>
+        <div class="panel-content">
+            <ol style="margin:5px 0 0 20px; padding:0;">
+                <li>Explore the correlation between nighttime light distribution and GDP levels of prefecture-level cities in Inner Mongolia.</li>
+                <li>Analyze the relationship between the distribution of industrial buildings/trade zones and GDP levels.</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- GDP & Light Intensity Chart Panel（缩小尺寸 + 右下角） -->
+    <div id="chart-panel" class="panel">
+        <div class="panel-header">GDP and Nighttime Light Intensity</div>
+        <div class="panel-content">
+            <div id="gdp-light-chart"></div>
+        </div>
+    </div>
+
+    <!-- Map container -->
+    <div id="map">
+        <div id="popup" class="ol-popup">
+            <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+            <div id="popup-content"></div>
+        </div>
+    </div>
+
+    <!-- GDP Search Panel -->
+    <div id="photonBox">
+        <strong>Query Prefecture-level City GDP</strong>
+        <input id="photonInput" type="text" placeholder="Enter city name (e.g., Hohhot)">
+        <div id="photonResults"></div>
+    </div>
+
+    <!-- Credits -->
+    <div id="credits">
+        Data Sources: Inner Mongolia Statistical Platform, Tianditu, Alibaba Cloud | Base Map © OpenStreetMap contributors (CC-BY-SA) | Export Tool: QGIS2Web
+    </div>
+
+    <!-- QGIS2Web core scripts -->
+    <script src="./resources/qgis2web_expressions.js"></script>
+    <script src="./resources/proj4.js"></script>
+    <script>proj4.defs('EPSG:4326', '+proj=longlat +datum=WGS84 +no_defs');</script>
+    <script src="./resources/functions.js"></script>
+    <script src="./resources/ol.js"></script>
+    <script src="./resources/horsey.min.js"></script>
+    <script src="./resources/ol-search-layer.js"></script>
+    <script src="./resources/ol-layerswitcher.js"></script>
+    <script src="./resources/photon-geocoder-autocomplete.min.js"></script>
+    <script src="./layers/__1.js"></script>
+    <script src="./layers/_railways_2.js"></script>
+    <script src="./layers/_4.js"></script>
+    <script src="./layers/_5.js"></script>
+    <script src="./styles/__1_style.js"></script>
+    <script src="./styles/_railways_2_style.js"></script>
+    <script src="./styles/_4_style.js"></script>
+    <script src="./styles/_5_style.js"></script>
+    <script src="./layers/layers.js"></script>
+    <script src="./resources/Autolinker.min.js"></script>
+    <script src="./resources/qgis2web.js"></script>
+
+    <script>
+        // 1. Collapsible panel functionality
+        document.querySelectorAll('.panel-header').forEach(header => {
+            header.addEventListener('click', function () {
+                const content = this.nextElementSibling;
+                this.classList.toggle('collapsed');
+                content.classList.toggle('hidden');
+            });
+        });
+
+        // 2. Initialize GDP & Light Intensity Chart（适配缩小后的面板）
+        function initChart() {
+            const chartDom = document.getElementById('gdp-light-chart');
+            const myChart = echarts.init(chartDom);
+            const cityData = [
+                ['Hohhot City', 1743.9, 8.2],
+                ['Baotou City', 2057.2, 7.9],
+                ['Wuhai City', null, 4.8],
+                ['Chifeng City', 1825.2, 6.1],
+                ['Tongliao City', 1039.1, 5.8],
+                ['Ordos City', 3533.7, 8.5],
+                ['Hulunbuir City', 1361.3, 5.2],
+                ['Bayannur City', 831.1, 4.5],
+                ['Ulanqab City', 926.8, 4.2],
+                ['Hinggan League', 549.3, 3.8],
+                ['Xilingol League', 1009.5, 4.0],
+                ['Alxa League', 284.4, 2.5]
+            ];
+            const option = {
+                title: { text: '2020 GDP vs Nighttime Light', left: 'center', textStyle: { fontSize: 12 } },
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: (params) => {
+                        const city = params[0].name;
+                        const gdp = params[0].value ? `${params[0].value} 100 million CNY` : 'No Data';
+                        const light = params[1].value;
+                        return `${city}<br>GDP：${gdp}<br>Nighttime Light：${light}`;
+                    }
+                },
+                legend: { data: ['GDP (100m CNY)', 'Nighttime Light'], top: 25, textStyle: { fontSize: 10 } },
+                grid: { left: '5%', right: '5%', bottom: '8%', containLabel: true },
+                yAxis: [
+                    { type: 'value', name: 'GDP (100m CNY)', min: 0, max: 4000, nameTextStyle: { fontSize: 10 }, axisLabel: { fontSize: 9 } },
+                    { type: 'value', name: 'Light Intensity', min: 0, max: 10, position: 'right', nameTextStyle: { fontSize: 10 }, axisLabel: { fontSize: 9 } }
+                ],
+                xAxis: { type: 'category', data: cityData.map(i => i[0]), axisLabel: { rotate: 45, interval: 0, fontSize: 9 } },
+                series: [
+                    { name: 'GDP (100m CNY)', type: 'line', smooth: true, color: '#0066cc', data: cityData.map(i => i[1]) },
+                    { name: 'Nighttime Light', type: 'line', smooth: true, color: '#ff6600', yAxisIndex: 1, data: cityData.map(i => i[2]) }
+                ]
+            };
+            myChart.setOption(option);
+            window.addEventListener('resize', () => myChart.resize());
+        }
+
+        // 3. GDP Search Functionality (hard-coded data)
+        (function () {
+            const input = document.getElementById('photonInput');
+            const resultsContainer = document.getElementById('photonResults');
+
+            const cityGDPData = [
+                { city: 'Hohhot City', gdp: 1743.9 },
+                { city: 'Baotou City', gdp: 2057.2 },
+                { city: 'Wuhai City', gdp: null },
+                { city: 'Chifeng City', gdp: 1825.2 },
+                { city: 'Tongliao City', gdp: 1039.1 },
+                { city: 'Ordos City', gdp: 3533.7 },
+                { city: 'Hulunbuir City', gdp: 1361.3 },
+                { city: 'Bayannur City', gdp: 831.1 },
+                { city: 'Ulanqab City', gdp: 926.8 },
+                { city: 'Hinggan League', gdp: 549.3 },
+                { city: 'Xilingol League', gdp: 1009.5 },
+                { city: 'Alxa League', gdp: 284.4 }
+            ];
+
+            function searchCityGDP(keyword) {
+                if (!keyword.trim()) {
+                    resultsContainer.style.display = 'none';
+                    return;
+                }
+
+                const matchedCities = cityGDPData.filter(item =>
+                    item.city.toLowerCase().includes(keyword.toLowerCase())
+                );
+
+                if (matchedCities.length > 0) {
+                    let html = '';
+                    matchedCities.forEach(item => {
+                        const gdpText = item.gdp !== null ? `${item.gdp} 100 million CNY` : 'No Data';
+                        html += `
+                                        <div class="photon-item">
+                                            <div class="city-name">${item.city}</div>
+                                            <div class="city-gdp">2020 Total GDP: ${gdpText}</div>
+                                        </div>
+                                    `;
+                    });
+                    resultsContainer.style.display = 'block';
+                    resultsContainer.innerHTML = html;
+                } else {
+                    resultsContainer.style.display = 'block';
+                    resultsContainer.innerHTML = `<div class="no-result">No prefecture-level city found for "${keyword}"</div>`;
+                }
+            }
+
+            input.addEventListener('input', () => {
+                searchCityGDP(input.value.trim());
+            });
+
+            document.addEventListener('click', (e) => {
+                const searchBox = document.getElementById('photonBox');
+                if (!searchBox.contains(e.target)) {
+                    resultsContainer.style.display = 'none';
+                }
+            });
+        })();
+
+        // 4. Initialize chart on page load
+        window.addEventListener('load', function () {
+            initChart();
+        });
+    </script>
+</body>
+</html>
