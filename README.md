@@ -1,0 +1,1 @@
+# GDP-and-Nighttime-Light-Remote-Sensing-Relationship-in-Inner-Mongolia-Autonomous-Region
