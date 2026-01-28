@@ -366,17 +366,17 @@
     <script src="./resources/ol-search-layer.js"></script>
     <script src="./resources/ol-layerswitcher.js"></script>
     <script src="./resources/photon-geocoder-autocomplete.min.js"></script>
-    <!-- 图层文件引用（和你layers文件夹实际文件完全匹配） -->
-    <script src="./layers/__1.js"></script>
-    <script src="./layers/_railways_2.js"></script>
-    <script src="./layers/_4.js"></script>
-    <script src="./layers/_5.js"></script>
-    <!-- 样式文件引用（和你styles文件夹实际文件完全匹配） -->
-    <script src="./styles/__1_style.js"></script>
-    <script src="./styles/_4_style.js"></script>
-    <script src="./styles/_5_style.js"></script>
-    <script src="./styles/_railways_2_style.js"></script>
-    <script src="./layers/layers.js"></script>
+    <!-- 图层文件引用：去掉layers/前缀，直接引用根目录文件 -->
+    <script src="./__1.js"></script>
+    <script src="./_railways_2.js"></script>
+    <script src="./_4.js"></script>
+    <script src="./_5.js"></script>
+    <!-- 样式文件引用：去掉styles/前缀，直接引用根目录文件 -->
+    <script src="./__1_style.js"></script>
+    <script src="./_4_style.js"></script>
+    <script src="./_5_style.js"></script>
+    <script src="./_railways_2_style.js"></script>
+    <script src="./layers.js"></script>
     <script src="./resources/Autolinker.min.js"></script>
     <script src="./resources/qgis2web.js"></script>
 
@@ -470,11 +470,11 @@
                     matchedCities.forEach(item => {
                         const gdpText = item.gdp !== null ? `${item.gdp} 100 million CNY` : 'No Data';
                         html += `
-                                            <div class="photon-item">
-                                                <div class="city-name">${item.city}</div>
-                                                <div class="city-gdp">2020 Total GDP: ${gdpText}</div>
-                                            </div>
-                                        `;
+                                                <div class="photon-item">
+                                                    <div class="city-name">${item.city}</div>
+                                                    <div class="city-gdp">2020 Total GDP: ${gdpText}</div>
+                                                </div>
+                                            `;
                     });
                     resultsContainer.style.display = 'block';
                     resultsContainer.innerHTML = html;
